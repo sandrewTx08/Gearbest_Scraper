@@ -1,0 +1,46 @@
+{
+    "search_list": [
+        "asus",
+        "huawai",
+        "lenovo",
+        "samsung",
+        "ulefone",
+        "xiaomi"
+    ],   
+    
+    "http_header": {
+        "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+    },
+    
+    "database": {
+        "name": "gearbest_scraper.db",
+               
+        "table_catalog": {
+            "name": "catalog_table",
+            
+            "id": "id",
+            "title": "title",
+            "link": "link",
+            "image": "image",
+            "price": "price",
+            "discount": "discount",
+            "price_tag": "price_tag",
+            "review_rate": "review_rate",
+            "review_count": "review_count",
+            "search_id": "search_id"
+        },
+        
+        "table_search": {
+            "name": "search_table",
+            
+            "id": "id",
+            "keyword": "keyword",
+            "category": "category",
+            "currency": "currency",
+            "pages_count": "pages_count",
+            "datetime": "datetime"
+        }
+        
+    }   
+}
+
