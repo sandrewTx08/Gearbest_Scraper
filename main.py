@@ -45,13 +45,15 @@ class Gearbest_Scraper(object):
                     REFERENCES {self.stble['name']} (id)
                 ); """)
 
-    def get_last_id(self):
-        return self.cursor.execute(
-            f""" SELECT MAX ({self.stble['id']})
-                FROM {self.stble['name']}; """).fetchone()[0]
+    def request(self, url):
+        """ Return page object """
+        page = get(url, params=self.conf['http_header'])
+        
+        if page.status_code == 200:
+            return HTML(page.text)
     
     def table_search_name(self, search_to_database, search_category, currency, pages_count_all): 
-
+        
         search_items_value = (
             search_to_database,
             search_category,
@@ -68,33 +70,17 @@ class Gearbest_Scraper(object):
             
             VALUES(?,?,?,?,date('now')); """, search_items_value)
 
-    def table_catalog_name(self, catalog_count, catalog_list_items):
+    def table_catalog_name(self, catalogs_list, catalog_count):
         
-        for i in catalog_count:
-
-            catalog_items_values = (
-                    catalog_list_items['id'][i], 
-                    catalog_list_items['title'][i],
-                    catalog_list_items['link'][i],
-                    catalog_list_items['image'][i],
-                    catalog_list_items['price'][i],
-                    catalog_list_items['discount'][i],
-                    catalog_list_items['price_tag'][i],
-                    catalog_list_items['review_rate'][i],
-                    catalog_list_items['review_count'][i],
-                    self.get_last_id()
-                )
-
+        for its in self.catalog_list(catalogs_list ,catalog_count):
             self.cursor.execute(
                 f""" INSERT INTO {self.ctble['name']}  
-                    VALUES (?,?,?,?,?,?,?,?,?,?); """, catalog_items_values)
+                    VALUES (?,?,?,?,?,?,?,?,?,?); """, its)
 
-    def request(self, url):
-        """ Return page object """
-        page = get(url, params=self.conf['http_header'])
-        
-        if page.status_code == 200:
-            return HTML(page.text)
+    def get_last_id(self):
+        return self.cursor.execute(
+            f""" SELECT MAX ({self.stble['id']})
+                FROM {self.stble['name']}; """).fetchone()[0]
 
     def catalog_list(self, catalogs_list, catalog_count):    
         """ Return value from catalog ads """
@@ -174,18 +160,19 @@ class Gearbest_Scraper(object):
                 for i in catalog_count
             ]
 
-        return {
-            "price": price,
-            "price_tage": price_tag,
-            "title": title,
-            "review_count": review_count,
-            "review_rate": review_rate,
-            "id": id,
-            "link": link,
-            "image": image,
-            "discount": discount,
-            "price_tag": price_tag
-        }
+        for i in catalog_count:       
+            yield (
+                    id[i], 
+                    title[i],
+                    link[i],
+                    image[i],
+                    price[i],
+                    discount[i],
+                    price_tag[i],
+                    review_rate[i],
+                    review_count[i],
+                    self.get_last_id()
+                )
 
     def scrape_catalog_by_search_bar(self, search):
         """ Access page by its page number
@@ -233,53 +220,39 @@ class Gearbest_Scraper(object):
                     catalog_list_items.xpath(
                         '//li[@data-goods-id]')))
 
-                catalog_list_items = self.catalog_list(
-                    catalogs_list,
-                    catalog_count)
-
                 self.table_catalog_name(
-                    catalog_count, 
-                    catalog_list_items)
+                    catalogs_list,
+                    catalog_count
+                    )
         
             else:
                 break
   
 
-def import_file(path):
-    try:
-        file = load(open(path))
-
-    except FileNotFoundError:
-        chdir(path.dirname(path.abspath(__file__)))
-        file = load(open(path))
-
-    finally:
-        return file
-
-
-def run(configuration_file):   
+def run(configuration_path):   
     """ Loading configuration from file 
     Execute the Gearbest_Scraper
     """
+    try:
+        config = load(open(configuration_path))
 
-    database = connect(configuration_file['database']['name'])
-    scraper = Gearbest_Scraper(configuration_file, database)
+    except FileNotFoundError:
+        chdir(path.dirname(path.abspath(__file__)))
+        config = load(open(configuration_path))
 
-    for search in configuration_file['search_list']:
-        scraper.scrape_catalog_by_search_bar(
-                search = search
-            )       
+    database = connect(config['database']['name'])   
+    scraper = Gearbest_Scraper(config, database)
+
+    for search in config['search_list']:
+        scraper.scrape_catalog_by_search_bar(search)       
         database.commit()
     
     database.close()
 
 
 def main():
+    run('configuration.json')
 
-    configuration_file = import_file('configuration.json')
-    
-    run(configuration_file)
-    
 
 if __name__ == '__main__':
     main()

@@ -2,7 +2,7 @@
 
 # ◾ Overview
 
-Gearbest_Scraper is simple, intuitive and manageable, it seeks catalogs ads from Gearbest web page, scraping catalogs information then it's storing by a sequence of SQL commands through to a relational database.
+Gearbest_Scraper is simple, intuitive and manageable, it seeks catalogs ads from Gearbest web page, scraping catalogs information then it's storing by a sequence of SQL commands through a relational database.
 
 # ◾ Installing
  
@@ -31,7 +31,7 @@ Gearbest_Scraper is simple, intuitive and manageable, it seeks catalogs ads from
 {"search_list": ["keyword1","keyword2","keyword3"]}
 ```
 
-2. Execute the program
+2. Execute the program 
 ```bash
 > cd Gearbest_Scraper
 > python main.py
