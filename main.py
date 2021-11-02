@@ -58,56 +58,65 @@ class Gearbest_Scraper(object):
 
     def table_search(self, search, reference_page): 
 
-        if search != None:
-            search_to_database = search.replace(
-                "'", '').replace('"', '')
-
-        elif search == None:
-            search_to_database = None
-
         if reference_page != None:
-            try:
-                search_category = reference_page.xpath(
-                    '//div[@class="cateMain_asideSeachTitle"]/a[@title]'
-                    )[0].get('title').replace("'", '').replace('"', '')
-
-            except IndexError:
-                try:
-                    search_category = reference_page.xpath(
-                        '//div[@class="searchTitle_wrap"]/h1'
-                        )[0].xpath('string()').replace("'", '').replace('"', '')
-                except IndexError:
-                    search_category = None
 
             try:
                 page_count_all = int(reference_page.xpath(
                     '//footer/div[2]/div/a[last()-1]')[0].xpath('string()'))
+            
             except IndexError:
                 page_count_all = 0
+                return page_count_all
 
-            currency = reference_page.xpath(
-                '//li[@id="js-btnShowShipto"]/span/span[2]')[0].xpath('string()')
+            if page_count_all != 0:
+                try:
+                    search_category = reference_page.xpath(
+                        '//div[@class="cateMain_asideSeachTitle"]/a[@title]'
+                        )[0].get('title').replace("'", '').replace('"', '')
 
-        search_items_value = (
-            search_to_database,
-            search_category,
-            currency,
-            page_count_all)
+                except IndexError:
+                    try:
+                        search_category = reference_page.xpath(
+                            '//div[@class="searchTitle_wrap"]/h1'
+                            )[0].xpath('string()').replace("'", '').replace('"', '')
+                    
+                    except IndexError:
+                        search_category = None
 
-        self.cursor.execute(
-        f""" INSERT INTO {self.stble['name']} 
-            ({self.stble['keyword']}, 
-            {self.stble['category']},
-            {self.stble['currency']},
-            {self.stble['pages_count']},
-            {self.stble['datetime']})
+                currency = reference_page.xpath(
+                    '//li[@id="js-btnShowShipto"]/span/span[2]')[0].xpath('string()')
 
-            VALUES(?,?,?,?,date('now')); """, search_items_value)
-        
-        return page_count_all
+                if search != None:
+                    search_to_database = search.replace(
+                        "'", '').replace('"', '')
 
+                elif search == None:
+                    search_to_database = None
+
+                search_items_value = (
+                    search_to_database,
+                    search_category,
+                    currency,
+                    page_count_all)
+
+                self.cursor.execute(
+                    f""" INSERT INTO {self.stble['name']} 
+                        ({self.stble['keyword']}, 
+                        {self.stble['category']},
+                        {self.stble['currency']},
+                        {self.stble['pages_count']},
+                        {self.stble['datetime']})
+
+                        VALUES(?,?,?,?,date('now')); """, search_items_value)
+                
+                return page_count_all
+
+        elif reference_page == None:
+            page_count_all = 0
+            return page_count_all
+    
     def table_catalog(self, catalog_list_box):
-        """ Return value from catalog ads """
+        """ Insert value from catalog ads """
         
         # List of catalog
         catalog_list = catalog_list_box.xpath(
@@ -218,15 +227,16 @@ class Gearbest_Scraper(object):
                     VALUES (?,?,?,?,?,?,?,?,?,?); """, catalog)
 
     def link_generator(self, page_menu):
-            for parent_link in page_menu.xpath(
-                '//li[@class="headCate_item"]/a[@class="headCate_itemName"]'):
-                
-                yield parent_link.get('href')
+        
+        for parent_link in page_menu.xpath(
+            '//li[@class="headCate_item"]/a[@class="headCate_itemName"]'):
             
-            for child_link in page_menu.xpath(
-                '//li[@class="headCate_item"]/div//a[@class="headCate_childName"]'):
-                
-                yield child_link.get('href')
+            yield parent_link.get('href')
+        
+        for child_link in page_menu.xpath(
+            '//li[@class="headCate_item"]/div//a[@class="headCate_childName"]'):
+            
+            yield child_link.get('href')
     
     def scrape_by_search_bar(self, search):
         """ Access page by its page number
@@ -253,7 +263,7 @@ class Gearbest_Scraper(object):
             if page_with_number != None:
                 
                 catalog_list_box = page_with_number.xpath(
-                        '//ul[@class="clearfix js_seachResultList"]')[0]
+                    '//ul[@class="clearfix js_seachResultList"]')[0]
 
             # Break loop if any catalog is not found
             if not catalog_list_box.find('li[@data-goods-id]') == None:

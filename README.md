@@ -39,7 +39,7 @@ Gearbest_Scraper is simple, intuitive and manageable, it seeks catalog ads from 
 
 ## Methods
 
-You can choose between two mode:
+Methods is how Gearbest_Scraper receive catalog ads informations.
 
 __Search__ is select by default
 
