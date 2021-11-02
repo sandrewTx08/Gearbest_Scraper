@@ -1,10 +1,10 @@
 # Gearbest_Scraper
 
-# ◾ Overview
+# Overview
 
-Gearbest_Scraper is simple, intuitive and manageable, it seeks catalogs ads from Gearbest web page, scraping catalogs information then it's storing by a sequence of SQL commands through a relational database.
+Gearbest_Scraper is simple, intuitive and manageable, it seeks catalog ads from Gearbest web page, scraping their information then it's storing by a sequence of SQL commands through a relational database.
 
-# ◾ Installing
+# Installing
  
 1. Download: 
 ```bash
@@ -23,7 +23,7 @@ Gearbest_Scraper is simple, intuitive and manageable, it seeks catalogs ads from
 > pip install -r requirements.txt
 ```
 
-# ◾ How to use
+# How to use
 
 1. Define yours search list keywords in __configuration.json__ file 
 
@@ -37,7 +37,32 @@ Gearbest_Scraper is simple, intuitive and manageable, it seeks catalogs ads from
 > python main.py
 ```
 
-### ◾ Configuration file:
+## Methods
+
+You can choose between two mode:
+
+__Search__ is select by default
+
+### Link method
+
+This method scrape all catalogs related to main page links on painel called "Category".
+The number total page is set by sum of parent and childrens links on painel menu. Overtime database get larger.
+
+```bash
+> python main.py --mode link
+```
+
+### Search method
+
+Search method uses a configuration file to set catalog targets.
+The "search_list" inside the file must contain a list of keywords to be scrape like a search bar style.
+
+
+```bash
+> python main.py --mode search
+```
+
+### Configuration file:
 
 The configuration file must have the following fields:
 
@@ -49,7 +74,7 @@ The configuration file must have the following fields:
 |table_catalog|containing catalogs ads information|
 |table_search|containing search categories|
 
-### ◾ Configurations example:
+### Configurations example:
 
 Phone brands list example:
 ```json

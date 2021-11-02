@@ -1,4 +1,5 @@
 from os import chdir, path
+from argparse import ArgumentParser
 from json import load
 from sqlite3 import connect
 from tqdm import trange
@@ -10,24 +11,25 @@ class Gearbest_Scraper(object):
 
     def __init__(self, configuration_file, database):
         self.conf = configuration_file
-            
-        self.cursor = database.cursor()
         
+        self.database = database
+        self.cursor = self.database.cursor()
+
         self.stble = self.conf['database']['table_search']
         self.ctble = self.conf['database']['table_catalog']
 
         self.cursor.execute(""" PRAGMA foreign_keys = 1; """)
-        
+
         self.cursor.execute(
             f""" CREATE TABLE IF NOT EXISTS {self.stble['name']} (
                     {self.stble['id']} INTEGER PRIMARY KEY AUTOINCREMENT,
-                    {self.stble['keyword']} TEXT NOT NULL,
+                    {self.stble['keyword']} TEXT,
                     {self.stble['category']} TEXT,
                     {self.stble['currency']} TEXT,
                     {self.stble['pages_count']} INTEGER,
                     {self.stble['datetime']} TEXT
                 ); """)
-        
+
         self.cursor.execute(
             f""" CREATE TABLE IF NOT EXISTS {self.ctble['name']} (
                     {self.ctble['id']} TEXT NOT NULL,
@@ -44,22 +46,54 @@ class Gearbest_Scraper(object):
                     FOREIGN KEY ({self.ctble['search_id']})
                     REFERENCES {self.stble['name']} (id)
                 ); """)
+        
+        self.database.commit()
 
     def request(self, url):
         """ Return page object """
-        page = get(url, params=self.conf['http_header'])
+        page = get(url, params=self.conf['http_header'], timeout=120)
         
         if page.status_code == 200:
             return HTML(page.text)
-    
-    def table_search_name(self, search_to_database, search_category, currency, pages_count_all): 
-        
+
+    def table_search(self, search, reference_page): 
+
+        if search != None:
+            search_to_database = search.replace(
+                "'", '').replace('"', '')
+
+        elif search == None:
+            search_to_database = None
+
+        if reference_page != None:
+            try:
+                search_category = reference_page.xpath(
+                    '//div[@class="cateMain_asideSeachTitle"]/a[@title]'
+                    )[0].get('title').replace("'", '').replace('"', '')
+
+            except IndexError:
+                try:
+                    search_category = reference_page.xpath(
+                        '//div[@class="searchTitle_wrap"]/h1'
+                        )[0].xpath('string()').replace("'", '').replace('"', '')
+                except IndexError:
+                    search_category = None
+
+            try:
+                page_count_all = int(reference_page.xpath(
+                    '//footer/div[2]/div/a[last()-1]')[0].xpath('string()'))
+            except IndexError:
+                page_count_all = 0
+
+            currency = reference_page.xpath(
+                '//li[@id="js-btnShowShipto"]/span/span[2]')[0].xpath('string()')
+
         search_items_value = (
             search_to_database,
             search_category,
             currency,
-            pages_count_all)
-        
+            page_count_all)
+
         self.cursor.execute(
         f""" INSERT INTO {self.stble['name']} 
             ({self.stble['keyword']}, 
@@ -67,101 +101,106 @@ class Gearbest_Scraper(object):
             {self.stble['currency']},
             {self.stble['pages_count']},
             {self.stble['datetime']})
-            
+
             VALUES(?,?,?,?,date('now')); """, search_items_value)
-
-    def table_catalog_name(self, catalogs_list, catalog_count):
         
-        for its in self.catalog_list(catalogs_list ,catalog_count):
-            self.cursor.execute(
-                f""" INSERT INTO {self.ctble['name']}  
-                    VALUES (?,?,?,?,?,?,?,?,?,?); """, its)
+        return page_count_all
 
-    def get_last_id(self):
-        return self.cursor.execute(
-            f""" SELECT MAX ({self.stble['id']})
-                FROM {self.stble['name']}; """).fetchone()[0]
-
-    def catalog_list(self, catalogs_list, catalog_count):    
+    def table_catalog(self, catalog_list_box):
         """ Return value from catalog ads """
+        
+        # List of catalog
+        catalog_list = catalog_list_box.xpath(
+            '//li[@data-goods-id]') 
+
+        # Avaliable catalog on page
+        catalog_count = range(len( 
+            catalog_list_box.xpath(
+                '//li[@data-goods-id]')))
 
         price=[
-                float(catalogs_list[i].get(
+                float(catalog_list[i].get(
                     'data-shopprice'))
                 for i in catalog_count
             ]
         
         id=[
-                catalogs_list[i].get(
+                catalog_list[i].get(
                     'data-goods-id')
                 for i in catalog_count
             ]
         
         image=[
-                catalogs_list[i].xpath(
+                catalog_list[i].xpath(
                     '//a[@data-img]/img[@data-lazy]')[i].get('data-lazy')
                     .replace("'", '').replace('"', '')
                 for i in catalog_count
             ]
         
         title=[
-                catalogs_list[i].xpath(
+                catalog_list[i].xpath(
                     '//div[@class="gbGoodsItem_outBox"]/p/a')[i].get('title')
                     .replace("'", '').replace('"', '')
                 for i in catalog_count
             ]
         
         link=[
-                catalogs_list[i].xpath(
+                catalog_list[i].xpath(
                     '//div[@class="gbGoodsItem_outBox"]/p/a')[i].get('href')
                     .replace("'", '').replace('"', '')
                 for i in catalog_count
             ]
         
         discount=[
-                int(catalogs_list[i].find(
+                int(catalog_list[i].find(
                     'span/strong').xpath('string()'))
-                if catalogs_list[i].find(
+                if catalog_list[i].find(
                     'span/strong') != None
                 else None
                 for i in catalog_count
             ]
         
         review_rate=[
-                float(catalogs_list[i].find(
+                float(catalog_list[i].find(
                     'div/div[2]/span/span[2]').xpath('string()'))
-                if catalogs_list[i].find(
+                if catalog_list[i].find(
                     'div/div[2]/span/span[2]') != None
                 else None
                 for i in catalog_count
             ]
         
         review_count=[
-                int(catalogs_list[i].xpath(
+                int(catalog_list[i].xpath(
                     '//li[@data-goods-id]')[i].find(
                         'div/div[2]/span/span[3]').xpath('string()')
                     .replace('(', '')
                     .replace(')', ''))
-                if catalogs_list[i].find(
+                if catalog_list[i].find(
                     'div/div[2]/span/span[3]') != None
                 else None
                 for i in catalog_count
             ]
         
         price_tag=[
-                catalogs_list[i].find(
+                catalog_list[i].find(
                     'div/div[1]/a/span').get('title')
                     .replace('Warehouse', '')
                     .replace("'", '').replace('"', '')
-                if catalogs_list[i].find('div/div[1]/a/span') != None
-                else catalogs_list[i].find('div/div[1]/span').xpath('string()')
-                if catalogs_list[i].find('div/div[1]/span') != None
+                if catalog_list[i].find('div/div[1]/a/span') != None
+                else catalog_list[i].find('div/div[1]/span').xpath('string()')
+                if catalog_list[i].find('div/div[1]/span') != None
                 else None
                 for i in catalog_count
             ]
 
-        for i in catalog_count:       
-            yield (
+        last_id = self.cursor.execute(
+            f""" SELECT MAX ({self.stble['id']})
+                FROM {self.stble['name']}; """).fetchone()[0]
+
+
+        def catalog_list():
+            for i in catalog_count:       
+                yield (
                     id[i], 
                     title[i],
                     link[i],
@@ -171,87 +210,137 @@ class Gearbest_Scraper(object):
                     price_tag[i],
                     review_rate[i],
                     review_count[i],
-                    self.get_last_id()
-                )
+                    last_id)
 
-    def scrape_catalog_by_search_bar(self, search):
+        for catalog in catalog_list():
+            self.cursor.execute(
+                f""" INSERT INTO {self.ctble['name']}  
+                    VALUES (?,?,?,?,?,?,?,?,?,?); """, catalog)
+
+    def link_generator(self, page_menu):
+            for parent_link in page_menu.xpath(
+                '//li[@class="headCate_item"]/a[@class="headCate_itemName"]'):
+                
+                yield parent_link.get('href')
+            
+            for child_link in page_menu.xpath(
+                '//li[@class="headCate_item"]/div//a[@class="headCate_childName"]'):
+                
+                yield child_link.get('href')
+    
+    def scrape_by_search_bar(self, search):
         """ Access page by its page number
             Insert catalog information into database
             """
-        
+
         search_to_url = search.replace(" ", "-")
-        search_to_database = search.replace("'", '').replace('"', '')
-        
+
         # Page used to refer primary values
         reference_page = self.request(
             'https://www.gearbest.com/sale/{}?page_size=120?odr=relevance'
             .format(search_to_url))
-        
-        search_category = reference_page.xpath(
-            '//div[@class="cateMain_asideSeachTitle"]/a[@title]'
-            )[0].get('title').replace("'", '').replace('"', '')
-        
-        pages_count_all = int(reference_page.xpath(
-            '//footer/div[2]/div/a[last()-1]')[0].xpath('string()'))
-        
-        currency = reference_page.xpath(
-            '//li[@id="js-btnShowShipto"]/span/span[2]')[0].xpath('string()')
 
-        self.table_search_name(
-            search_to_database,
-            search_category,
-            currency,
-            pages_count_all)
+        table_search_page_count_all = self.table_search(
+            search,
+            reference_page)
 
-        for page_number in trange(pages_count_all, colour='WHITE', desc=f'{search}'):
-            
-            catalog_list_items = self.request(
+        for page_number in trange(table_search_page_count_all, colour='WHITE', desc=search):
+
+            page_with_number = self.request(
                 'https://www.gearbest.com/sale/{}/{}.html?page_size=120?odr=relevance'
-                .format(search_to_url, page_number + 1)).xpath(
-                    '//ul[@class="clearfix js_seachResultList"]')[0]
+                .format(search_to_url, page_number + 1))
             
-            # Break loop if any catalog is not found
-            if not catalog_list_items.find('li[@data-goods-id]') == None:
+            if page_with_number != None:
                 
-                catalogs_list = catalog_list_items.xpath(
-                    '//li[@data-goods-id]') # List of catalog
-                
-                catalog_count = range(len( # Avaliable catalog on page
-                    catalog_list_items.xpath(
-                        '//li[@data-goods-id]')))
+                catalog_list_box = page_with_number.xpath(
+                        '//ul[@class="clearfix js_seachResultList"]')[0]
 
-                self.table_catalog_name(
-                    catalogs_list,
-                    catalog_count
-                    )
+            # Break loop if any catalog is not found
+            if not catalog_list_box.find('li[@data-goods-id]') == None:
+                self.table_catalog(catalog_list_box)
         
             else:
                 break
-  
+        
+        self.database.commit()
+        
+    def scrape_by_link_generator(self):
+        
+        # Page used to refer primary values
+        page_menu = self.request(
+            'https://www.gearbest.com/')
 
-def run(configuration_path):   
+        for url in self.link_generator(page_menu):
+
+            reference_page = self.request(
+                '{}?page_size=120?odr=relevance'
+                .format(url))
+            
+            table_search_page_count_all = self.table_search(
+                None,
+                reference_page)
+
+            for page_number in trange(table_search_page_count_all, colour='WHITE', desc=url):
+         
+                page_with_number = self.request('{}{}.html?page_size=120?odr=relevance'
+                .format(url, page_number + 1))
+
+                if not page_with_number == None:
+                    
+                    catalog_list_box = page_with_number.xpath(
+                        '//ul[@class="clearfix js_seachResultList"]')[0]
+
+                # Break loop if any catalog is not found
+                if not catalog_list_box.find('li[@data-goods-id]') == None:
+                    self.table_catalog(catalog_list_box)
+
+                else:
+                    break
+
+            self.database.commit()
+
+
+def run(path, mode):   
     """ Loading configuration from file 
     Execute the Gearbest_Scraper
     """
-    try:
-        config = load(open(configuration_path))
 
-    except FileNotFoundError:
-        chdir(path.dirname(path.abspath(__file__)))
-        config = load(open(configuration_path))
+    def configuration(path):
+        try:
+            config = load(open(path))
 
+        except FileNotFoundError:
+            chdir(path.dirname(path.abspath(__file__)))
+            config = load(open(path))
+
+        return config
+    
+    config = configuration(path)
     database = connect(config['database']['name'])   
     scraper = Gearbest_Scraper(config, database)
+    
+    if mode == 'search' or mode.startswith('s'):
+        for search in config['search_list']:
+            scraper.scrape_by_search_bar(search)       
 
-    for search in config['search_list']:
-        scraper.scrape_catalog_by_search_bar(search)       
-        database.commit()
+    if mode == 'link' or mode.startswith('l'):
+        scraper.scrape_by_link_generator()
     
     database.close()
 
 
 def main():
-    run('configuration.json')
+
+    parser = ArgumentParser()
+
+    parser.add_argument('--mode', type=str, default='search', 
+    help='choose a method to Gearbest_Scraper')
+    parser.add_argument('--config', type=str, default='configuration.json', 
+    help='configuration file ex: configuration.json')
+
+    args = parser.parse_args()
+
+    run(args.config, args.mode)
 
 
 if __name__ == '__main__':
