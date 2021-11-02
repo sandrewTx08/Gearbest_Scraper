@@ -38,9 +38,16 @@
             "category": "category",
             "currency": "currency",
             "pages_count": "pages_count",
+            "currency_id": "currency_id",
             "datetime": "datetime"
-        }
+        },
         
+        "table_currency": {
+            "name": "currency_table",
+
+            "id": "id",
+            "abbreviation": "abbreviation"
+        }
     }   
 }
 

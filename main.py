@@ -17,17 +17,26 @@ class Gearbest_Scraper(object):
 
         self.stble = self.conf['database']['table_search']
         self.ctble = self.conf['database']['table_catalog']
+        self.crtble = self.conf['database']['table_currency']
 
         self.cursor.execute(""" PRAGMA foreign_keys = 1; """)
 
+        self.cursor.execute(f""" CREATE TABLE IF NOT EXISTS {self.crtble['name']}  (
+                {self.crtble['id']} INTEGER PRIMARY KEY AUTOINCREMENT,
+                {self.crtble['abbreviation']} TEXT
+            ); """)
+        
         self.cursor.execute(
             f""" CREATE TABLE IF NOT EXISTS {self.stble['name']} (
                     {self.stble['id']} INTEGER PRIMARY KEY AUTOINCREMENT,
                     {self.stble['keyword']} TEXT,
                     {self.stble['category']} TEXT,
-                    {self.stble['currency']} TEXT,
                     {self.stble['pages_count']} INTEGER,
-                    {self.stble['datetime']} TEXT
+                    {self.stble['datetime']} TEXT,
+                    {self.stble['currency_id']} TEXT,
+                    
+                    FOREIGN KEY ({self.stble['currency_id']})
+                    REFERENCES {self.crtble['name']} ({self.crtble['id']})
                 ); """)
 
         self.cursor.execute(
@@ -92,22 +101,34 @@ class Gearbest_Scraper(object):
 
                 elif search == None:
                     search_to_database = None
+                
+                USD_NUM = 1
+
+                currency_value = (
+                    USD_NUM,
+                    currency
+                )
+                
+                self.cursor.execute(
+                    f"""INSERT OR IGNORE INTO {self.crtble['name']} 
+                        ({self.crtble['id']}, {self.crtble['abbreviation']}) 
+                        VALUES (?,?); """, currency_value)
 
                 search_items_value = (
                     search_to_database,
                     search_category,
-                    currency,
-                    page_count_all)
-
+                    page_count_all,
+                    USD_NUM)
+                
                 self.cursor.execute(
                     f""" INSERT INTO {self.stble['name']} 
                         ({self.stble['keyword']}, 
                         {self.stble['category']},
-                        {self.stble['currency']},
                         {self.stble['pages_count']},
-                        {self.stble['datetime']})
+                        {self.stble['datetime']},
+                        {self.stble['currency_id']})
 
-                        VALUES(?,?,?,?,date('now')); """, search_items_value)
+                        VALUES(?,?,?,date('now'),?); """, search_items_value)
                 
                 return page_count_all
 
