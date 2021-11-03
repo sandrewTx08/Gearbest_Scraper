@@ -21,11 +21,11 @@ class Gearbest_Scraper(object):
 
         self.cursor.execute(""" PRAGMA foreign_keys = 1; """)
 
-        self.cursor.execute(f""" CREATE TABLE IF NOT EXISTS {self.crtble['name']}  (
+        self.cursor.execute(f""" CREATE TABLE IF NOT EXISTS {self.crtble['name']} (
                 {self.crtble['id']} INTEGER PRIMARY KEY AUTOINCREMENT,
                 {self.crtble['abbreviation']} TEXT
             ); """)
-        
+
         self.cursor.execute(
             f""" CREATE TABLE IF NOT EXISTS {self.stble['name']} (
                     {self.stble['id']} INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -34,7 +34,7 @@ class Gearbest_Scraper(object):
                     {self.stble['pages_count']} INTEGER,
                     {self.stble['datetime']} TEXT,
                     {self.stble['currency_id']} TEXT,
-                    
+
                     FOREIGN KEY ({self.stble['currency_id']})
                     REFERENCES {self.crtble['name']} ({self.crtble['id']})
                 ); """)
@@ -51,24 +51,26 @@ class Gearbest_Scraper(object):
                     {self.ctble['review_rate']}  REAL,
                     {self.ctble['review_count']}  INTEGER,
                     {self.ctble['search_id']} INTEGER,
-                    
+
                     FOREIGN KEY ({self.ctble['search_id']})
                     REFERENCES {self.stble['name']} (id)
                 ); """)
-        
+
         self.database.commit()
 
     def request(self, url):
         """ Return page object """
-        page = get(url, params=self.conf['http_header'], timeout=120)
-        
+    
+        page = get(url, 
+            timeout=120, 
+            params=self.conf['http_header'])
+
         if page.status_code == 200:
             return HTML(page.text)
 
     def table_search(self, search, reference_page): 
 
         if reference_page != None:
-
             try:
                 page_count_all = int(reference_page.xpath(
                     '//footer/div[2]/div/a[last()-1]')[0].xpath('string()'))
@@ -92,34 +94,42 @@ class Gearbest_Scraper(object):
                     except IndexError:
                         search_category = None
 
-                currency = reference_page.xpath(
-                    '//li[@id="js-btnShowShipto"]/span/span[2]')[0].xpath('string()')
-
                 if search != None:
                     search_to_database = search.replace(
                         "'", '').replace('"', '')
 
                 elif search == None:
                     search_to_database = None
-                
-                USD_NUM = 1
 
-                currency_value = (
-                    USD_NUM,
-                    currency
-                )
-                
-                self.cursor.execute(
-                    f"""INSERT OR IGNORE INTO {self.crtble['name']} 
-                        ({self.crtble['id']}, {self.crtble['abbreviation']}) 
-                        VALUES (?,?); """, currency_value)
+                currency = reference_page.xpath(
+                    '//li[@id="js-btnShowShipto"]/span/span[2]')[0].xpath('string()')
+
+                # Check last currency id
+                currency_last_id = self.cursor.execute(  
+                    f""" SELECT * FROM {self.crtble['name']} 
+                            WHERE {self.crtble['abbreviation']} LIKE '{currency}'
+                        ; """).fetchone()
+
+                # Create a currency id if not exist
+                if currency_last_id == None:
+                    self.cursor.execute(
+                        f""" INSERT INTO {self.crtble['name']} 
+                                ({self.crtble['id']},{self.crtble['abbreviation']}) 
+                                VALUES (?,?)
+                            ; """, (None, currency))
+
+                    # Set '1' as default value 
+                    currency_id = 1
+
+                elif currency_last_id[1] == currency:
+                    currency_id = currency_last_id[0]
 
                 search_items_value = (
                     search_to_database,
                     search_category,
                     page_count_all,
-                    USD_NUM)
-                
+                    currency_id)
+
                 self.cursor.execute(
                     f""" INSERT INTO {self.stble['name']} 
                         ({self.stble['keyword']}, 
@@ -129,13 +139,13 @@ class Gearbest_Scraper(object):
                         {self.stble['currency_id']})
 
                         VALUES(?,?,?,date('now'),?); """, search_items_value)
-                
+
                 return page_count_all
 
         elif reference_page == None:
             page_count_all = 0
             return page_count_all
-    
+
     def table_catalog(self, catalog_list_box):
         """ Insert value from catalog ads """
         
@@ -227,7 +237,6 @@ class Gearbest_Scraper(object):
             f""" SELECT MAX ({self.stble['id']})
                 FROM {self.stble['name']}; """).fetchone()[0]
 
-
         def catalog_list():
             for i in catalog_count:       
                 yield (
@@ -248,17 +257,17 @@ class Gearbest_Scraper(object):
                     VALUES (?,?,?,?,?,?,?,?,?,?); """, catalog)
 
     def link_generator(self, page_menu):
-        
+
         for parent_link in page_menu.xpath(
             '//li[@class="headCate_item"]/a[@class="headCate_itemName"]'):
-            
+
             yield parent_link.get('href')
-        
+
         for child_link in page_menu.xpath(
             '//li[@class="headCate_item"]/div//a[@class="headCate_childName"]'):
-            
+
             yield child_link.get('href')
-    
+
     def scrape_by_search_bar(self, search):
         """ Access page by its page number
             Insert catalog information into database
