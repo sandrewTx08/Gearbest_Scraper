@@ -1,4 +1,4 @@
-from os import chdir, path
+from os import chdir, path as sys_path
 from argparse import ArgumentParser
 from json import load
 from sqlite3 import connect
@@ -58,16 +58,6 @@ class Gearbest_Scraper(object):
 
         self.database.commit()
 
-    def request(self, url):
-        """ Return page object """
-    
-        page = get(url, 
-            timeout=120, 
-            params=self.conf['http_header'])
-
-        if page.status_code == 200:
-            return HTML(page.text)
-
     def page_count_all(self, reference_page):
 
         if reference_page != None:
@@ -111,16 +101,18 @@ class Gearbest_Scraper(object):
                         WHERE {self.crtble['abbreviation']} LIKE '{currency}'
                     ; """).fetchone()
 
+        currency_id = last_id()
+
         # Create a currency id if not exist
-        if last_id()[0] == None:
+        if currency_id[0] == None:
             self.cursor.execute(
                 f""" INSERT INTO {self.crtble['name']} 
                         ({self.crtble['id']},{self.crtble['abbreviation']}) 
                         VALUES (?,?)
                     ; """, (None, currency))
 
-        elif last_id()[1] == currency:
-            return last_id()[0]
+        elif currency_id[1] == currency:
+            return currency_id[0]
 
     def table_search(self, search, reference_page, page_count_all): 
         
@@ -150,6 +142,8 @@ class Gearbest_Scraper(object):
                     {self.stble['currency_id']})
 
                     VALUES(?,?,?,date('now'),?); """, search_items_value)
+            
+            self.database.commit()
 
     def table_catalog(self, page_with_number):
         """ Insert catalog ads into database """
@@ -269,8 +263,6 @@ class Gearbest_Scraper(object):
                     f""" INSERT INTO {self.ctble['name']}  
                         VALUES (?,?,?,?,?,?,?,?,?,?); """, catalog)
             
-            self.database.commit()
-    
     def link_generator(self, page_menu):
 
         for parent_link in page_menu.xpath(
@@ -282,7 +274,20 @@ class Gearbest_Scraper(object):
             '//li[@class="headCate_item"]/div//a[@class="headCate_childName"]'):
 
             yield child_link.get('href')
+
+
+class Method(Gearbest_Scraper):
+
+    def request(self, url):
+        """ Return page object """
     
+        page = get(url, 
+            timeout=120, 
+            params=self.conf['http_header'])
+
+        if page.status_code == 200:
+            return HTML(page.text)
+
     def scrape_by_search_bar(self):
 
         for search in self.conf['search_list']:
@@ -372,23 +377,23 @@ def run(path, mode):
             config = load(open(path))
 
         except FileNotFoundError:
-            chdir(path.dirname(path.abspath(__file__)))
+            chdir(sys_path.dirname(sys_path.abspath(__file__)))
             config = load(open(path))
 
         return config
     
     config = configuration(path)
     database = connect(config['database']['name'])   
-    scraper = Gearbest_Scraper(config, database)
+    method = Method(config, database)
     
     if mode == 'search' or mode.startswith('s'):
-        scraper.scrape_by_search_bar()       
+        method.scrape_by_search_bar()       
 
     if mode == 'link' or mode.startswith('l'):
-        scraper.scrape_by_link_generator()
+        method.scrape_by_link_generator()
     
     if mode == 'popular' or mode.startswith('p'):
-        scraper.scrape_by_popular_searches()
+        method.scrape_by_popular_searches()
     
     database.close()
 
