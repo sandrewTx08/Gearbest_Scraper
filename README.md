@@ -82,7 +82,7 @@ Command line:
 > python main.py --mode popular
 ```
 
-## Configuration file:
+# Configuration file:
 
 The configuration file must have the following fields:
 
