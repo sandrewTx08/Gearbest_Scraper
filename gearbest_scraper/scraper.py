@@ -48,7 +48,7 @@ class Attributes(object):
                     return None 
 
     def catalog(self, page):
-        """ Information ads  generator """
+        """ Scrape catalog ads """
         page = self.request(page)
         
         if page != None:
@@ -130,38 +130,39 @@ class Attributes(object):
                         for i in catalog_count ]
 
                 for i in catalog_count:       
-                    yield [
-                        id[i], 
-                        title[i],
-                        link[i],
-                        image[i],
-                        price[i],
-                        discount[i],
-                        price_tag[i],
-                        review_rate[i],
-                        review_count[i]
-                    ]
-                
+                    """ Append values related to 'table_catalog' sequence order
+                        'table_catalog' columns:
+                            1. id
+                            2. title
+                            3. link
+                            4. image
+                            5. price
+                            6. discount
+                            7. price_tag
+                            8. review_rate
+                            9. review_count
+                            10. search_id (foreign key) """
+                    
+                    yield [ id[i], title[i], link[i], 
+                            image[i], price[i], discount[i], 
+                            price_tag[i], review_rate[i], 
+                            review_count[i] ]
+       
     def link_generator(self, page):
         page = self.request(page)
         
-        for parent_link in page.xpath(
-            '//li[@class="headCate_item"]/a[@class="headCate_itemName"]'):
+        for link in page.xpath(
+            '//ul[@class="headCate"]/li[@class="headCate_item"]//*[@href]'):
+           
+           yield (link.get('href'), link.xpath('string()'))  
 
-            yield parent_link.get('href')
-
-        for child_link in page.xpath(
-            '//li[@class="headCate_item"]/div//a[@class="headCate_childName"]'):
-
-            yield child_link.get('href')
-    
     def popular_searches(self, page):
         page = self.request(page)
         
-        for pop_item in page.xpath(
+        for link in page.xpath(
             '//li[@class="footerHotkey_item"]/a'):
             
-            yield (pop_item.get('href'), pop_item.xpath('string()'))
+            yield (link.get('href'), link.xpath('string()'))
 
 
 class Database(Attributes):
@@ -183,60 +184,57 @@ class Database(Attributes):
         self.ctble = self.conf['database']['table_catalog']
         self.crtble = self.conf['database']['table_currency']
 
-        self.cursor.execute(""" PRAGMA foreign_keys = 1; """)
+        # Enable foreign keys
+        self.cursor.execute(""" PRAGMA foreign_keys = 1 ; """)
 
         self.cursor.execute(f""" CREATE TABLE IF NOT EXISTS {self.crtble['name']} (
                 {self.crtble['id']} INTEGER PRIMARY KEY AUTOINCREMENT,
-                {self.crtble['abbreviation']} TEXT
-            ); """)
+                {self.crtble['abbreviation']} TEXT ); """)
 
         self.cursor.execute(
             f""" CREATE TABLE IF NOT EXISTS {self.stble['name']} (
-                    {self.stble['id']} INTEGER PRIMARY KEY AUTOINCREMENT,
-                    {self.stble['keyword']} TEXT,
-                    {self.stble['category']} TEXT,
-                    {self.stble['pages_count']} INTEGER,
-                    {self.stble['datetime']} TEXT,
-                    {self.stble['currency_id']} TEXT,
+                {self.stble['id']} INTEGER PRIMARY KEY AUTOINCREMENT,
+                {self.stble['keyword']} TEXT,
+                {self.stble['category']} TEXT,
+                {self.stble['pages_count']} INTEGER,
+                {self.stble['datetime']} TEXT,
+                {self.stble['currency_id']} TEXT,
 
-                    FOREIGN KEY ({self.stble['currency_id']})
-                    REFERENCES {self.crtble['name']} ({self.crtble['id']})
-                ); """)
+                FOREIGN KEY ({self.stble['currency_id']})
+                REFERENCES {self.crtble['name']} ({self.crtble['id']}) ); """)
 
         self.cursor.execute(
             f""" CREATE TABLE IF NOT EXISTS {self.ctble['name']} (
-                    {self.ctble['id']} TEXT NOT NULL,
-                    {self.ctble['title']} TEXT NOT NULL,
-                    {self.ctble['link']} TEXT NOT NULL,
-                    {self.ctble['image']} TEXT,
-                    {self.ctble['price']}  REAL NOT NULL,
-                    {self.ctble['discount']}  INTEGER,
-                    {self.ctble['price_tag']}  TEXT,
-                    {self.ctble['review_rate']}  REAL,
-                    {self.ctble['review_count']}  INTEGER,
-                    {self.ctble['search_id']} INTEGER,
+                {self.ctble['id']} TEXT NOT NULL,
+                {self.ctble['title']} TEXT NOT NULL,
+                {self.ctble['link']} TEXT NOT NULL,
+                {self.ctble['image']} TEXT,
+                {self.ctble['price']} REAL NOT NULL,
+                {self.ctble['discount']} INTEGER,
+                {self.ctble['price_tag']} TEXT,
+                {self.ctble['review_rate']} REAL,
+                {self.ctble['review_count']} INTEGER,
+                {self.ctble['search_id']} INTEGER,
 
-                    FOREIGN KEY ({self.ctble['search_id']})
-                    REFERENCES {self.stble['name']} (id)
-                ); """)
+                FOREIGN KEY ({self.ctble['search_id']})
+                REFERENCES {self.stble['name']} ({self.stble['id']}) ); """)
 
         self.database.commit()
     
     @property
     def currency_id(self):
+        """ Query last id from currency table """
         currency_id = self.cursor.execute(  
             f""" SELECT MAX({self.crtble['id']}), {self.crtble['abbreviation']} 
-                    FROM {self.crtble['name']} 
-                    WHERE {self.crtble['abbreviation']} LIKE '{self.currency}'
-                ; """).fetchone()
+                FROM {self.crtble['name']} 
+                WHERE {self.crtble['abbreviation']} LIKE '{self.currency}'; """).fetchone()
 
         # Create a currency id if not exist
         if currency_id[0] == None:
             self.cursor.execute(
                 f""" INSERT INTO {self.crtble['name']} 
-                        ({self.crtble['id']},{self.crtble['abbreviation']}) 
-                        VALUES (?,?)
-                    ; """, (None, self.currency))
+                    ({self.crtble['id']},{self.crtble['abbreviation']}) 
+                    VALUES (?,?); """, (None, self.currency))
             return 1
 
         elif currency_id[1] == self.currency:
@@ -272,9 +270,9 @@ class Database(Attributes):
 
     def table_catalog(self, page_with_catalog):
         # Provide last id from 'table_search'
-        last_id = [self.cursor.execute(
-               f""" SELECT MAX ({self.stble['id']})
-                   FROM {self.stble['name']}; """).fetchone()[0]]
+        last_id = [ int(self.cursor.execute(
+                f""" SELECT MAX ({self.stble['id']})
+                    FROM {self.stble['name']}; """).fetchone()[0]) ]
 
         for catalog in self.catalog(page_with_catalog):           
             # Concat catalog with last id as tuple
@@ -291,29 +289,37 @@ class Method(Database):
 
     def request(self, url):
         """ Return page object """
-        page = self.session.get(url, 
-            timeout=120,
-            params=self.conf['http_header'])
-        
-        if page.status_code == 200:
-            return HTML(page.text)
-    
-    def scrape_pattern(self, 
-                            page_with_ads, 
-                            table_search_keyword_name, 
-                            range_display_name, 
-                            page_root_url):
+        url_check = (url.startswith('http://') 
+                    or url.startswith('https://') 
+                    or url.startswith('www.'))
+        if url_check:
+            try:
+                page = self.session.get(url, 
+                    timeout=120,
+                    params=self.conf['http_header'])
+            except:
+                return None
+            
+            if page.status_code == 200:
+                page_object = HTML(page.text)
+                if page_object != None: return page_object 
+                else: return None 
+        else:
+            return None
+
+    def scrape_pattern(self, url, keyword):
         """ Scrape pages based on url pattern """
-        self.page_root = self.request(page_root_url)
-        self.table_search(table_search_keyword_name)
+        self.page_root = self.request(url)
+        self.table_search(keyword)
         
-        for page_number in trange(self.page_count_all, 
-                                                    colour='WHITE', 
-                                                    desc=range_display_name):
-            self.table_catalog(
+        for url_number in trange(self.page_count_all, 
+                                colour='WHITE', 
+                                desc=keyword):
+            url_pattern = (
                 '{}{}.html?page_size=120?odr=relevance'
-                .format(page_with_ads, page_number + 1)
-            )       
+                .format(url, url_number + 1))
+            
+            self.table_catalog(url_pattern)       
 
     def scrape_by_search_bar(self):
         for search in self.conf['search_list']:
@@ -321,10 +327,8 @@ class Method(Database):
             url = 'https://www.gearbest.com/sale/{}/'.format(search)
             
             self.scrape_pattern(
-                page_with_ads = url,
-                page_root_url = url,
-                table_search_keyword_name = search,
-                range_display_name = search)
+                url = url,
+                keyword = search)
         self.database.close()
 
     def scrape_by_link_generator(self):
@@ -333,22 +337,18 @@ class Method(Database):
         
         for url in self.link_generator(menu_url):
             self.scrape_pattern(
-                page_with_ads = url,
-                page_root_url = url,
-                table_search_keyword_name = None,
-                range_display_name = url)      
+                url = url[0],
+                keyword = url[1])      
         self.database.close()
 
     def scrape_by_popular_searches(self):
         # Page used to refer primary values
         menu_url = 'https://www.gearbest.com/'
         
-        for pop_item in self.popular_searches(menu_url):
+        for url in self.popular_searches(menu_url):
             self.scrape_pattern(
-                page_with_ads = pop_item[0],
-                page_root_url = pop_item[0],
-                table_search_keyword_name = pop_item[1],
-                range_display_name = pop_item[1])
+                url = url[0],
+                keyword = url[1])
         self.database.close()
 
 
