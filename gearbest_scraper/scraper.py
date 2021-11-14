@@ -139,20 +139,14 @@ class Attributes(object):
                             discount[i], price_tag[i], review_rate[i], review_count[i] ]
         else: return None
     
-    def link_gen(self):
-        page = self.request(self.page_menu_url)
-        
-        for link in page.xpath(
+    def link_gen(self):        
+        for link in self.page_menu.xpath(
             '//ul[@class="headCate"]/li[@class="headCate_item"]//*[@href]'):
-           
            yield (link.get('href'), link.xpath('string()'))  
 
-    def popular_searches_gen(self):
-        page = self.request(self.page_menu_url)
-        
-        for link in page.xpath(
+    def popular_searches_gen(self):       
+        for link in self.page_menu.xpath(
             '//li[@class="footerHotkey_item"]/a'):
-            
             yield (link.get('href'), link.xpath('string()'))
 
 
