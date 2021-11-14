@@ -12,19 +12,25 @@ Gearbest_Scraper is simple, intuitive and manageable, it seeks catalog ads from 
  
 1. Download: 
 ```bash
-> git clone https://github.com/sandrewTx08/Gearbest_Scraper
+some_folder> git clone https://github.com/sandrewTx08/Gearbest_Scraper
 ```
 
 2. Move to directory 
 
 ```bash
-> cd Gearbest_Scraper
+some_folder> cd Gearbest_Scraper
 ```
 
 3. Installing dependencies: 
 
 ```bash
-> pip install -r requirements.txt
+some_folder\Gearbest_Scraper> install.bat
+```
+
+__or__
+
+```bash
+some_folder\Gearbest_Scraper> pip install -r requirements.txt
 ```
 
 # How to use
@@ -36,9 +42,16 @@ Gearbest_Scraper is simple, intuitive and manageable, it seeks catalog ads from 
 ```
 
 2. Execute the program 
+
 ```bash
-> cd Gearbest_Scraper
-> python main.py
+some_folder> cd Gearbest_Scraper
+some_folder\Gearbest_Scraper> start.bat
+```
+
+__or__
+
+```bash
+some_folder\Gearbest_Scraper> python main.py
 ```
 
 # Methods
@@ -56,7 +69,7 @@ The number total page is set by sum of parent and childrens links on painel menu
 
 Command line:
 ```bash
-> python main.py --mode link
+Gearbest_Scraper> python main.py --mode link
 ```
 
 ## Search method
@@ -68,7 +81,7 @@ The "search_list" inside the file must contain a list of keywords to be scrape l
 
 Command line:
 ```bash
-> python main.py --mode search
+Gearbest_Scraper> python main.py --mode search
 ```
 
 ## Popular method
@@ -79,7 +92,7 @@ It scrape the most popular searches according web page.
 
 Command line:
 ```bash
-> python main.py --mode popular
+Gearbest_Scraper> python main.py --mode popular
 ```
 
 # Configuration file:
@@ -109,6 +122,6 @@ HTTP Header example:
 
 Defining database path:
 ```json
-{"database": {"name": "C://gearbest_scraper.db"}}
+{"database": {"name": "C:/Users/some_user/Documents/gearbest_scraper.db"}}
 ```
 
