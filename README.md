@@ -38,7 +38,7 @@ some_folder\Gearbest_Scraper> pip install -r requirements.txt
 1. Define yours search list keywords in __configuration.json__ file 
 
 ```json
-{"search_list": ["keyword1","keyword2","keyword3"]}
+{"search":{"list":["keyword_foo_1","keyword_foo_2","keyword_foo_3"]}}
 ```
 
 2. Execute the program 
@@ -99,29 +99,28 @@ Gearbest_Scraper> python main.py --mode popular
 
 The configuration file must have the following fields:
 
-|key|description|
-|---|---|
-|search_list|keyword list to be scraped|
-|http_header|http header to request web pages|
-|database|database settings|
-|table_catalog|containing catalogs ads information|
-|table_search|containing search categories|
-|table_currency|currency identifiers|
+field|key|description|
+|---|---|---|
+|method||settings realted to its function|
+|connection|request|to request web pages|
+|connection|database|database settings|
+
+Each selected method must be enable to work properly
 
 ## Configurations example:
 
 Phone brands list example:
 ```json
-{"search_list": ["asus","huawai","lenovo","samsung","ulefone","xiaomi"]}
+{"search":{"list":["asus","huawai","lenovo","samsung","ulefone","xiaomi"]}}
 ```
 
 HTTP Header example:
 ```json
-{"http_header": {"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"}}
+{"headers":{"User-Agent":"Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"}}
 ```
 
 Defining database path:
 ```json
-{"database": {"name": "C:/Users/some_user/Documents/gearbest_scraper.db"}}
+{"connection":{"database":{"sqlite":{"enable":true,"path":"C:/Users/some_user/Documents/gearbest_scraper.db"}}}}
 ```
 

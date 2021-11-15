@@ -1,53 +1,43 @@
 {
-    "search_list": [
-        "asus",
-        "huawai",
-        "lenovo",
-        "samsung",
-        "ulefone",
-        "xiaomi"
-    ],   
-    
-    "http_header": {
-        "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+    "method": {
+        "search": {
+            "enable": true,
+            "list": [
+                "asus",
+                "huawai",
+                "lenovo",
+                "samsung",
+                "ulefone",
+                "xiaomi"
+            ] 
+        },
+        
+        "link": {
+            "enable": true
+        },
+        
+        "popular": {
+            "enable": true
+        }  
     },
     
-    "database": {
-        "name": "gearbest_scraper.db",
-               
-        "table_catalog": {
-            "name": "catalog_table",
-            
-            "id": "id",
-            "title": "title",
-            "link": "link",
-            "image": "image",
-            "price": "price",
-            "discount": "discount",
-            "price_tag": "price_tag",
-            "review_rate": "review_rate",
-            "review_count": "review_count",
-            "search_id": "search_id"
+    "connection": {
+        "database": {
+            "sqlite": {
+                "enable": true,
+                "path": null
+            }
         },
         
-        "table_search": {
-            "name": "search_table",
+        "request": {
+            "headers": {
+                "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+            },
             
-            "id": "id",
-            "keyword": "keyword",
-            "category": "category",
-            "currency": "currency",
-            "pages_count": "pages_count",
-            "currency_id": "currency_id",
-            "datetime": "datetime"
-        },
-        
-        "table_currency": {
-            "name": "currency_table",
-
-            "id": "id",
-            "abbreviation": "abbreviation"
+            "cookies": {
+                "gb_currencyCode": "USD"
+            }
         }
-    }   
+    }
 }
 
