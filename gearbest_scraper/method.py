@@ -33,24 +33,3 @@ class Method(scraper.Attributes, database.Connection):
         for values in self.popular_searches_gen():
             self.scrape_pattern(values[0], values[1])
 
-
-def run(path, mode):   
-    """ Execute the Gearbest_Scraper """
-    method = Method(path)
-    
-    if mode == 'search' or mode.startswith('s'):
-        # >> python --mode search
-        assert method.conf['method']['search']['enable'] == True
-        method.scrape_by_search_bar()      
-
-    elif mode == 'link' or mode.startswith('l'):
-        # >> python --mode link
-        assert method.conf['method']['link']['enable'] == True
-        method.scrape_by_link_url()
-    
-    elif mode == 'popular' or mode.startswith('p'):
-        # >> python --mode popular
-        assert method.conf['method']['popular']['enable'] == True
-        method.scrape_by_popular_searches()
-
-    method.database.close() 
