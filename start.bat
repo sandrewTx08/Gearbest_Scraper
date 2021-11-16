@@ -1,16 +1,16 @@
 @echo off
-:: Default filenames
 set main=main.py
-set conf=configuration.json
-                                            
-if "%2"=="" (set /P mode="Method: ") else (set mode=%2)
+if "%conf_param%" == "" set conf_param=configuration.json
 
-:: Replace ( -- )
-set mode=%mode:--=%
+set /P mode_param="Method: "
 
-if "%mode:~0,1%" == "s" set mode=search
-if "%mode:~0,1%" == "l" set mode=link
-if "%mode:~0,1%" == "p" set mode=popular
+if "%mode_param:~0,1%" == "s" set mode_param=search
+if "%mode_param:~0,1%" == "l" set mode_param=link
+if "%mode_param:~0,1%" == "p" set mode_param=popular
 
-python %main% %conf% %mode%
+set conf_arg=--conf %conf_param%
+set mode_arg=--mode %mode_param%
+set command=python %main% %conf_arg% %mode_arg%
+
+%command%
 

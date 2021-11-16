@@ -12,25 +12,31 @@ Gearbest_Scraper is simple, intuitive and manageable, it seeks catalog ads from 
  
 1. Download: 
 ```bash
-some_folder> git clone https://github.com/sandrewTx08/Gearbest_Scraper
+> git clone https://github.com/sandrewTx08/Gearbest_Scraper
 ```
 
 2. Move to directory 
 
 ```bash
-some_folder> cd Gearbest_Scraper
+> cd Gearbest_Scraper
 ```
 
 3. Installing dependencies: 
 
 ```bash
-some_folder\Gearbest_Scraper> install.bat
+Gearbest_Scraper> install.bat
 ```
 
 __or__
 
 ```bash
-some_folder\Gearbest_Scraper> pip install -r requirements.txt
+Gearbest_Scraper:~$ ./install.bash
+```
+
+__or__
+
+```bash
+Gearbest_Scraper> pip install -r requirements.txt
 ```
 
 # How to use
@@ -44,21 +50,41 @@ some_folder\Gearbest_Scraper> pip install -r requirements.txt
 2. Execute the program 
 
 ```bash
-some_folder> cd Gearbest_Scraper
-some_folder\Gearbest_Scraper> start.bat
+> cd Gearbest_Scraper
+Gearbest_Scraper> start.bat
 ```
 
 __or__
 
 ```bash
-some_folder\Gearbest_Scraper> python main.py
+Gearbest_Scraper> python main.py
 ```
 
 # Methods
 
 Methods is how Gearbest_Scraper receive catalog ads.
 
-__Search__ is select by default
+So you can use a simple script instead parsing argument.
+
+Windows:
+
+```bash
+Gearbest_Scraper> start.bat
+```
+
+Linux:
+
+```bash
+Gearbest_Scraper:~$ ./start.bash
+```
+
+Setting search method example:
+ 
+```
+Method: s
+```
+
+__Search__ is select by default.
 
 ## Link method
 
@@ -69,7 +95,7 @@ The number total page is set by sum of parent and childrens links on painel menu
 
 Command line:
 ```bash
-Gearbest_Scraper> python main.py --mode link
+> python main.py --mode link
 ```
 
 ## Search method
@@ -81,7 +107,7 @@ The "search_list" inside the file must contain a list of keywords to be scrape l
 
 Command line:
 ```bash
-Gearbest_Scraper> python main.py --mode search
+> python main.py --mode search
 ```
 
 ## Popular method
@@ -92,7 +118,7 @@ It scrape the most popular searches according web page.
 
 Command line:
 ```bash
-Gearbest_Scraper> python main.py --mode popular
+> python main.py --mode popular
 ```
 
 # Configuration file:
@@ -104,8 +130,6 @@ field|key|description|
 |method||settings realted to its function|
 |connection|request|to request web pages|
 |connection|database|database settings|
-
-Each selected method must be enable to work properly
 
 ## Configurations example:
 
@@ -121,6 +145,6 @@ HTTP Header example:
 
 Defining database path:
 ```json
-{"connection":{"database":{"sqlite":{"enable":true,"path":"C:/Users/some_user/Documents/gearbest_scraper.db"}}}}
+{"database":{"sqlite":{"path":"C:/Users/some_user/Documents/gearbest_scraper.db"}}}
 ```
 

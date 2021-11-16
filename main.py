@@ -1,13 +1,24 @@
-from sys import argv
-from gearbest_scraper import method as mt
+from argparse import ArgumentParser
+from gearbest_scraper import method
 
 
 def main():
-    method = mt.Method(argv[1])
-    if argv[2] == 'search': method.scrape_by_search_bar()       
-    elif argv[2] == 'link': method.scrape_by_link_url()
-    elif argv[2] == 'popular': method.scrape_by_popular_searches()
-    method.database.close() 
+    parser = ArgumentParser()
+    parser.add_argument('--mode', default='search')
+    parser.add_argument('--conf', default='configuration.json')
+    args = parser.parse_args()
+    
+    m = method.Method(args.conf)
+    if args.mode == 'search': 
+        assert m.conf['method']['search']['enable']==True
+        m.scrape_by_search_bar()
+    elif args.mode == 'link': 
+        assert m.conf['method']['link']['enable']==True
+        m.scrape_by_link_url()
+    elif args.mode == 'popular': 
+        assert m.conf['method']['popular']['enable']==True
+        m.scrape_by_popular_searches()
+    m.database.close() 
 
 
 if __name__ == '__main__':

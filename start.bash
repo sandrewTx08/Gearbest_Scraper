@@ -1,25 +1,27 @@
 #!/bin/bash
 main="main.py"
-conf="configuration.json"
-mode="$2"
+conf_param="configuration.json"
 
-if [ "$mode" == "" ]
-then read -p "Method:" mode 
-fi
+read -p "Method: " mode_param
 
-if [ "${mode:0:1}" == "s" ]; 
+if [ "${mode_param:0:1}" == "s" ]; 
 then 
-    method="search" 
+    mode_param="search" 
 fi
 
-if [ "${mode:0:1}" == "l" ]; 
+if [ "${mode_param:0:1}" == "l" ]; 
 then 
-    method="link" 
+    mode_param="link" 
 fi
 
-if [ "${mode:0:1}" == "p" ]; 
+if [ "${mode_param:0:1}" == "p" ]; 
 then 
-    method="popular" 
+    mode_param="popular" 
 fi
 
-python $main $conf $method
+conf_arg="--conf $conf_param"
+mode_arg="--mode $mode_param"
+command="python $main $conf_arg $mode_arg"
+
+$command
+
