@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS catalog_table (
     review_rate REAL,
     review_count INTEGER,
     search_id INTEGER,
+    
     FOREIGN KEY (search_id)
     REFERENCES search_table (id)
 );

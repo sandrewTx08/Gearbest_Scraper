@@ -3,6 +3,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/sandrewTx08/Gearbest_Scraper)
 
+# Support
+
+| <img width=100px src="https://logodownload.org/wp-content/uploads/2016/10/mysql-logo.png"> | <img width=100px src="https://logodownload.org/wp-content/uploads/2018/05/sqlite-logo.png"> | <img width=100px src="https://upload.wikimedia.org/wikipedia/commons/2/29/Postgresql_elephant.svg"> | <img width=100px src="https://logodownload.org/wp-content/uploads/2016/10/Microsoft-SQL-Server-Logo-1.png"> | <img width=100px src="https://logodownload.org/wp-content/uploads/2014/04/oracle-logo-0.png">
+|---|---|---|---|---|
+| Avaliable | Avaliable | Soon | Maybe soon | Maybe soon |
 
 # Overview
 

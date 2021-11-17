@@ -10,15 +10,18 @@ def main():
     
     m = method.Method(args.conf)
     if args.mode == 'search': 
-        assert m.conf['method']['search']['enable']==True
+        assert m.conf['method']['search']['enable']
         m.scrape_by_search_bar()
     elif args.mode == 'link': 
-        assert m.conf['method']['link']['enable']==True
+        assert m.conf['method']['link']['enable']
         m.scrape_by_link_url()
     elif args.mode == 'popular': 
-        assert m.conf['method']['popular']['enable']==True
+        assert m.conf['method']['popular']['enable']
         m.scrape_by_popular_searches()
-    m.database.close() 
+    
+    # Close connections
+    if m.sqlite_enable: m.sqlite_cursor.close(), m.sqlite_database.close()
+    if m.mysql_enable: m.mysql_cursor.close(), m.mysql_database.close()
 
 
 if __name__ == '__main__':
