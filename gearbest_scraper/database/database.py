@@ -11,14 +11,14 @@ class SQLite(object):
         # Enable foreign keys
         self.sqlite_cursor.execute(""" PRAGMA foreign_keys = 1 ; """)
 
-        currency_table = open('gearbest_scraper/database/sqlite/currency_table.sql').read()
-        self.sqlite_cursor.executescript(currency_table)
+        self.sqlite_cursor.executescript(
+            open('gearbest_scraper/database/sqlite/currency_table.sql').read())
+        
+        self.sqlite_cursor.executescript(
+            open('gearbest_scraper/database/sqlite/search_table.sql').read())
 
-        search_table = open('gearbest_scraper/database/sqlite/search_table.sql').read()
-        self.sqlite_cursor.executescript(search_table)
-
-        catalog_table = open('gearbest_scraper/database/sqlite/catalog_table.sql').read()
-        self.sqlite_cursor.executescript(catalog_table)
+        self.sqlite_cursor.executescript(
+            open('gearbest_scraper/database/sqlite/catalog_table.sql').read())
 
         self.sqlite_database.commit()
 
@@ -50,6 +50,7 @@ class SQLite(object):
                 self.search_category,
                 self.page_count_all,
                 self.sqlite_currency_id)   
+            
             self.sqlite_cursor.execute(
                 f""" INSERT INTO search_table (keyword, 
                     category, pages_count, 
@@ -71,11 +72,8 @@ class SQLite(object):
             
             self.sqlite_cursor.execute(
                 f""" INSERT INTO catalog_table 
-                    VALUES (?,?,
-                            ?,?,
-                            ?,?,
-                            ?,?,
-                            ?,?); """, catalog_concat)
+                    VALUES (?,?,?,?,?,
+                            ?,?,?,?,?); """, catalog_concat)
 
 
 class MySQL(object):
@@ -83,16 +81,20 @@ class MySQL(object):
     def mysql_init(self):
         """ Create database """
         for _ in self.mysql_cursor.execute(open(
-            'gearbest_scraper/database/mysql/database.sql').read(), multi=True): pass
+            'gearbest_scraper/database/mysql/database.sql')
+                .read(), multi=True): pass
 
         for _ in self.mysql_cursor.execute(open(
-            'gearbest_scraper/database/mysql/currency_table.sql').read(), multi=True): pass
+            'gearbest_scraper/database/mysql/currency_table.sql')
+                .read(), multi=True): pass
 
         for _ in self.mysql_cursor.execute(open(
-            'gearbest_scraper/database/mysql/search_table.sql').read(), multi=True): pass
+            'gearbest_scraper/database/mysql/search_table.sql')
+                .read(), multi=True): pass
 
         for _ in self.mysql_cursor.execute(open(
-            'gearbest_scraper/database/mysql/catalog_table.sql').read(), multi=True): pass
+            'gearbest_scraper/database/mysql/catalog_table.sql')
+                .read(), multi=True): pass
 
         self.mysql_database.commit()
             
@@ -127,11 +129,8 @@ class MySQL(object):
             
             self.mysql_cursor.execute(
                 """ INSERT INTO catalog_table 
-                    VALUES (%s,%s,
-                            %s,%s,
-                            %s,%s,
-                            %s,%s,
-                            %s,%s); """, catalog_concat)
+                    VALUES (%s,%s,%s,%s,%s,
+                            %s,%s,%s,%s,%s); """, catalog_concat)
 
     def mysql_table_search(self, keyword):
         if self.page_count_all != 0:

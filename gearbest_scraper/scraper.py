@@ -5,8 +5,7 @@ from requests import Session, Request
 class Attributes(object):
     """ Page objects """
     session = Session()
-    url_pattern = '{}{}.html?page_size=120?odr=relevance'
-    
+
     def request(self, url):
         """ Return page object """       
         if (url.startswith('http://') or url.startswith('https://') 
@@ -28,18 +27,17 @@ class Attributes(object):
 
     @property
     def page_menu(self):
-        return self.request(self.page_menu_url)
-    page_menu_url = 'https://www.gearbest.com/'
+        return self.request('https://www.gearbest.com/')
     
     @property
     def page_root(self):
         return self.request(self.page_root_url)
-    page_root_url = None
     
     @property
     def page_ads(self):
-        return self.request(self.page_ads_url)
-    page_ads_url = None
+        return self.request(
+            '{}{}.html?page_size=120?odr=relevance'.format(
+                self.page_root_url, self.url_number))
 
     @property
     def page_count_all(self):           
@@ -70,7 +68,6 @@ class Attributes(object):
 
     def catalog_gen(self):
         """ Scrape catalog ads """
-        
         if self.page_ads != None:
             # Catalog list parent element
             try: catalog_list_box = self.page_ads.xpath(

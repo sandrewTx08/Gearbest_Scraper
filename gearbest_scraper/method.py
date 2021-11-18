@@ -7,28 +7,24 @@ class Method(scraper.Attributes, database.Connection):
     """ Request page ads """
     
     def scrape_pattern(self, url, keyword):
-        """ Scrape pages based on url pattern """               
+        """ Scrape pages based on url pattern """                           
         self.page_root_url = url
-                
-        if self.page_count_all != 0 or None:           
+        
+        # Fill search_table
+        (self.sqlite_table_search(keyword) 
+        if self.sqlite_enable else None)
+        
+        (self.mysql_table_search(keyword)
+        if self.mysql_enable else None)
+        
+        for self.url_number in trange(self.page_count_all, desc=keyword):            
             
-            # Fill search_table
-            (self.sqlite_table_search(keyword) 
+            # Fill catalog_table
+            (self.sqlite_table_catalog()
             if self.sqlite_enable else None)
             
-            (self.mysql_table_search(keyword)
+            (self.mysql_table_catalog()
             if self.mysql_enable else None)
-            
-            for url_number in trange(self.page_count_all, desc=keyword):
-                # Defining page with ad by URL pattern
-                self.page_ads_url = self.url_pattern.format(url, url_number + 1)
-                
-                # Fill catalog_table
-                (self.sqlite_table_catalog()
-                if self.sqlite_enable else None)
-                
-                (self.mysql_table_catalog()
-                if self.mysql_enable else None)
 
     def scrape_by_search_bar(self):
         for search in self.conf['method']['search']['list']:
