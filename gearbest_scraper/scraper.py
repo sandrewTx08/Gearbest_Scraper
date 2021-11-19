@@ -141,14 +141,14 @@ class Attributes(object):
                         for i in catalog_count_range ]
                     
                     for i in catalog_count_range:       
-                        """ Append values related to 'table_catalog' sequence order
-                            'table_catalog' columns:
-                                #1 id, #2 title
-                                #3 link, #4 image
-                                #5 price, #6 discount,
-                                #7 price_tag, #8 review_rate,
-                                #9 review_count, #10 search_id (foreign key) """
-                        
+                        """ Append values related to 'catalog_table' sequence order
+                                'catalog_table' columns:
+                                    #1 id, #2 title
+                                    #3 link, #4 image
+                                    #5 price, #6 discount,
+                                    #7 price_tag, #8 review_rate,
+                                    #9 review_count, #10 search_id (foreign key) """
+                            
                         yield [ id[i], title[i], link[i], image[i], price[i], 
                             discount[i], price_tag[i], review_rate[i], review_count[i] ]
         else: return None

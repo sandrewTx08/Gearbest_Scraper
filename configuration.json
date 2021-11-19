@@ -22,7 +22,12 @@
     },
     
     "connection": {
-        "database": {
+        "csv": {
+            "enable": false,
+            "path": null
+        },
+        
+        "database": {            
             "sqlite": {
                 "enable": true,
                 "path": null
