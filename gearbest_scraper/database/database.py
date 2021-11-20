@@ -1,4 +1,3 @@
-from re import search
 from sqlite3 import connect as sqlite
 from mysql.connector import connect as mysql
 from json import load

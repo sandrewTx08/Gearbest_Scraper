@@ -3,6 +3,7 @@ from . import scraper
 from csv import writer
 from tqdm import trange
 
+
 class CSV(object):
     csv_open_catalog = False
     csv_open_search = False
