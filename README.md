@@ -9,7 +9,7 @@ Gearbest_Scraper is simple, intuitive and manageable, it seeks catalog ads from 
 
 # Support
 
-| <img src="https://www.iconsdb.com/icons/preview/green/csv-xxl.png"> | <img width=100px src="https://logodownload.org/wp-content/uploads/2016/10/mysql-logo.png"> | <img width=100px src="https://logodownload.org/wp-content/uploads/2018/05/sqlite-logo.png"> | <img width=100px src="https://upload.wikimedia.org/wikipedia/commons/2/29/Postgresql_elephant.svg"> | <img width=100px src="https://logodownload.org/wp-content/uploads/2016/10/Microsoft-SQL-Server-Logo-1.png"> | <img width=100px src="https://logodownload.org/wp-content/uploads/2014/04/oracle-logo-0.png"> |
+| <img width=100px src="https://www.iconsdb.com/icons/preview/green/csv-xxl.png"> | <img width=100px src="https://logodownload.org/wp-content/uploads/2016/10/mysql-logo.png"> | <img width=100px src="https://logodownload.org/wp-content/uploads/2018/05/sqlite-logo.png"> | <img width=100px src="https://upload.wikimedia.org/wikipedia/commons/2/29/Postgresql_elephant.svg"> | <img width=100px src="https://logodownload.org/wp-content/uploads/2016/10/Microsoft-SQL-Server-Logo-1.png"> | <img width=100px src="https://logodownload.org/wp-content/uploads/2014/04/oracle-logo-0.png"> |
 |---|---|---|---|---|---|
 | CSV | MySQL | SQLite | Postgresql | Microsoft SQL Server | Oracle Database |
 | ✅ Avaliable | ✅ Avaliable | ✅ Avaliable | ⚠️ Soon | ⚠️ Maybe soon | ⚠️ Maybe soon |
