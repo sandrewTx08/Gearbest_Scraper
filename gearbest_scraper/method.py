@@ -3,43 +3,72 @@ from . import scraper
 from csv import writer
 from tqdm import trange
 
-
-class Method(scraper.Attributes, database.Connection):
-    """ Request page ads """
-
-    def to_csv(self):
+class CSV(object):
+    csv_open_catalog = False
+    csv_open_search = False
+    
+    def csv_catalog_init(self):
         """ Append values related to 'catalog_table' sequence order
-                'catalog_table' columns:
-                    #1 id, #2 title
-                    #3 link, #4 image
-                    #5 price, #6 discount,
-                    #7 price_tag, #8 review_rate,
-                    #9 review_count, #10 search_id (foreign key) """
-       
-        with open(('catalog.csv' 
-            if not self.conf['connection']['csv']['path'] 
-            else self.conf['connection']['csv']['path']),
-                'w', encoding='UTF-8', newline='') as file:
+                    'catalog_table' columns:
+                        #1 id, #2 title
+                        #3 link, #4 image
+                        #5 price, #6 discount,
+                        #7 price_tag, #8 review_rate,
+                        #9 review_count, #10 search_id (foreign key) """
+        
+        if self.conf['connection']['csv']['enable']:
+            self.csv_open_catalog = True
             
-            csvfile_catalog = writer(file)                   
-            csvfile_catalog.writerow(['id', 'title', 'link', 'image', 'price', 
+            self.csvfile_catalog = writer(open('catalog.csv',
+                'w', encoding='UTF-8', newline=''))
+            
+            self.csvfile_catalog.writerow(['id', 'title', 'link', 'image', 'price', 
                 'discount', 'price_tag', 'review_rate', 'review_count'])
-            
-            for catalog in self.catalog_gen():
-                csvfile_catalog.writerow(catalog)
 
+    def csv_search_init(self):
+        
+        if self.conf['connection']['csv']['enable']:
+            self.csv_open_search = True
+
+            self.csvfile_search = writer(open('search.csv',
+                'w', encoding='UTF-8', newline=''))
+            
+            self.csvfile_search.writerow(['keyword', 
+                'category', 'pages_count'])
+
+    def to_csv_search(self):
+        if not self.csv_open_search:
+            self.csv_search_init()
+        
+        else: self.csvfile_search.writerow(self.search_values)
+    
+    def to_csv_catalog(self):            
+        if not self.csv_open_catalog:
+            self.csv_catalog_init()
+        
+        else:
+            for catalog in self.catalog_gen():
+                self.csvfile_catalog.writerow(catalog)
+
+class Method(CSV, scraper.Attributes, database.Connection):
+    """ Request page ads """  
+ 
     def scrape_pattern(self, url, keyword):
         """ Scrape pages based on url pattern """                           
         self.page_root_url = url
+        self.keyword = keyword
         
         # Fill search_table
-        (self.sqlite_table_search(keyword) 
+        (self.sqlite_table_search() 
         if self.sqlite_enable else None)
         
-        (self.mysql_table_search(keyword)
+        (self.mysql_table_search()
         if self.mysql_enable else None)
         
-        for self.url_number in trange(self.page_count_all, desc=keyword):            
+        (self.to_csv_search()
+            if self.conf['connection']['csv']['enable'] else None)
+
+        for self.url_number in trange(self.page_count_all, desc=self.keyword):            
             # Fill catalog_table
             (self.sqlite_table_catalog()
             if self.sqlite_enable else None)
@@ -47,7 +76,7 @@ class Method(scraper.Attributes, database.Connection):
             (self.mysql_table_catalog()
             if self.mysql_enable else None)
 
-            (self.to_csv()
+            (self.to_csv_catalog()
             if self.conf['connection']['csv']['enable'] else None)
 
     def scrape_by_search_bar(self):

@@ -1,3 +1,4 @@
+from re import search
 from sqlite3 import connect as sqlite
 from mysql.connector import connect as mysql
 from json import load
@@ -40,23 +41,16 @@ class SQLite(object):
 
         elif currency_id[1] == self.currency: return currency_id[0]
 
-    def sqlite_table_search(self, keyword):        
+    def sqlite_table_search(self):        
         if self.page_count_all != 0:
-            values = ((keyword  # Formatting string to database 
-                        .replace("'", '')
-                        .replace('"', '')
-                    if keyword != None
-                    else None),
-                self.search_category,
-                self.page_count_all,
-                self.sqlite_currency_id)   
-            
             self.sqlite_cursor.execute(
                 f""" INSERT INTO search_table (keyword, 
                     category, pages_count, 
                     datetime, currency_id)
 
-                    VALUES (?,?,?,date('now'),?); """, values)
+                    VALUES (?,?,?,date('now'),?); """, 
+                        tuple(self.search_values)
+                        +tuple([self.sqlite_currency_id]))
             
             self.sqlite_database.commit()
 
@@ -67,13 +61,13 @@ class SQLite(object):
                     FROM search_table; """).fetchone()[0]) ]
 
         for catalog in self.catalog_gen():           
-            # Concat catalog with last id as tuple
-            catalog_concat = tuple(catalog) + tuple(last_id) 
-            
+            # Concat catalog with last id as tuple            
             self.sqlite_cursor.execute(
                 f""" INSERT INTO catalog_table 
                     VALUES (?,?,?,?,?,
-                            ?,?,?,?,?); """, catalog_concat)
+                            ?,?,?,?,?); """, 
+                                tuple(catalog)
+                                +tuple(last_id))
 
 
 class MySQL(object):
@@ -132,23 +126,16 @@ class MySQL(object):
                     VALUES (%s,%s,%s,%s,%s,
                             %s,%s,%s,%s,%s); """, catalog_concat)
 
-    def mysql_table_search(self, keyword):
-        if self.page_count_all != 0:
-            values = ((keyword  # Formatting string to database 
-                        .replace("'", '')
-                        .replace('"', '')
-                    if keyword != None
-                    else None),
-                self.search_category,
-                self.page_count_all,
-                self.mysql_currency_id)   
-            
+    def mysql_table_search(self):
+        if self.page_count_all != 0: 
             self.mysql_cursor.execute(
                 """ INSERT INTO search_table (keyword, 
                     category, pages_count, 
                     datetime, currency_id)
 
-                    VALUES (%s,%s,%s,NULL,%s); """, values)
+                    VALUES (%s,%s,%s,NULL,%s); """, 
+                        tuple(self.search_values)
+                        +tuple([self.mysql_currency_id]))
             
             self.mysql_database.commit()   
 

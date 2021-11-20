@@ -65,7 +65,18 @@ class Attributes(object):
                     '//div[@class="searchTitle_wrap"]/h1'
                     )[0].xpath('string()').replace("'", '').replace('"', '')
                 except IndexError: return None 
-
+    
+    @property
+    def search_values(self):
+        if self.page_count_all != 0:
+            return [ (self.keyword  # Formatting string
+                        .replace("'", '')
+                        .replace('"', '')
+                    if self.keyword != None
+                    else None),
+                self.search_category,
+                self.page_count_all ]
+        
     def catalog_gen(self):
         """ Scrape catalog ads """
         if self.page_ads != None:
